@@ -17,16 +17,17 @@ import java.util.logging.Logger;
         subCategoryId = "Cat1"
 )
 public class ExampleClassConnector extends TPConnector<TouchPortalSampleJavaPlugin> {
+    public ExampleClassConnector(TouchPortalSampleJavaPlugin touchPortalPlugin) {
+        super(touchPortalPlugin);
+    }
+
     private final static Logger LOGGER = Logger.getLogger(TouchPortalPlugin.class.getName());
 
     @ConnectorValue
     private Integer value;
+
     @Data
     private String param;
-
-    public ExampleClassConnector(TouchPortalSampleJavaPlugin touchPortalPlugin) {
-        super(touchPortalPlugin);
-    }
 
     @Override
     public void onInvoke() {

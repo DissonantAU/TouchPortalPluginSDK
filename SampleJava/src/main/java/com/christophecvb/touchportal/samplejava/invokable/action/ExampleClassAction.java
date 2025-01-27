@@ -22,14 +22,14 @@ import java.util.logging.Logger;
         format = "Exemple d'Action via une Classe avec le paramètre {$param$}"
 )
 public class ExampleClassAction extends TPAction<TouchPortalSampleJavaPlugin> {
+    public ExampleClassAction(TouchPortalSampleJavaPlugin touchPortalPlugin) {
+        super(touchPortalPlugin);
+    }
+
     private final static Logger LOGGER = Logger.getLogger(TouchPortalPlugin.class.getName());
 
     @Data
     private String param;
-
-    public ExampleClassAction(TouchPortalSampleJavaPlugin touchPortalPlugin) {
-        super(touchPortalPlugin);
-    }
 
     @Override
     public void onInvoke() {
