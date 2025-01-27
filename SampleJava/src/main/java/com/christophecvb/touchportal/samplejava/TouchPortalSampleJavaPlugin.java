@@ -41,86 +41,19 @@ import java.util.logging.Logger;
         name = BuildConfig.NAME,
         parentCategory = ParentCategory.CONTENT
 )
-public class TouchPortalSampleJavaPlugin extends TouchPortalPlugin implements TouchPortalPlugin.TouchPortalPluginListener {
-    /**
-     * Logger
-     */
-    private final static Logger LOGGER = Logger.getLogger(TouchPortalPlugin.class.getName());
-
-    private enum Categories {
-        /**
-         * Category definition example
-         */
-        @Category(name = "Touch Portal Plugin Example Base Category", imagePath = "images/icon-24.png")
-        BaseCategory,
-        @Category(name = "Touch Portal Plugin Example Second Category", imagePath = "images/icon-24.png")
-        SecondCategory,
-        @Category(name = "Touch Portal Plugin Example Category With Subcategories", imagePath = "images/icon-24.png", subCategories = {
-                @Category.SubCategory(id = "SubCat1", name = "SubCategory 1", imagePath = "%TP_PLUGIN_FOLDER%/images/icon-24.png")
-        })
-        CategoryWithSubs
-    }
-
-    /**
-     * State and Event definition example
-     */
-    @State(defaultValue = "1", categoryId = "BaseCategory")
-    @Event(valueChoices = {"1", "2"}, format = "When customStateWithEvent becomes $val")
-    private String customStateWithEvent;
-
-    /**
-     * State and Event definition example
-     */
-    @State(defaultValue = "1", categoryId = "BaseCategory")
-    @Event(format = "When customStateWithEvent becomes $val")
-    private String stateWithEventTypeText;
-    /**
-     * State and Event in Subcategory definition example
-     */
-    @State(defaultValue = "1", categoryId = "CategoryWithSubs")
-    @Event(valueChoices = {"1", "2"}, format = "When customStateWithEventInSubCat becomes $val", subCategoryId = "Cat1")
-    private String customStateWithEventInSubCat;
-
-    /**
-     * State of type choice definition example
-     */
-    @State(valueChoices = {"1", "2"}, defaultValue = "1", categoryId = "SecondCategory")
-    private String[] customStateChoice;
-
-    /**
-     * State of type text definition example
-     */
-    @State(defaultValue = "Default Value", categoryId = "SecondCategory")
-    private String customStateText;
-
-    /**
-     * Setting of type text definition example
-     */
-    @Setting(name = "IP", defaultValue = "localhost", maxLength = 15, tooltip = @Setting.Tooltip(
-            title = "IP address",
-            body = "ip address to connect to",
-            docUrl = "https://example.com"
-    ))
-    private String ipSetting;
-
-    /**
-     * Setting of type number definition example
-     */
-    @Setting(name = "Update Delay", defaultValue = "10", minValue = 10, maxValue = 30)
-    private int updateDelaySetting = 10;
-
-    /**
-     * Setting of type String and is read only definition example
-     */
-    @Setting(name = "Read Only", defaultValue = "Disconnected", isReadOnly = true)
-    private String readOnly = "Disconnected";
-
+public class TouchPortalSampleJavaPlugin
+        extends TouchPortalPlugin implements TouchPortalPlugin.TouchPortalPluginListener {
     /**
      * Constructor calling super
      */
     public TouchPortalSampleJavaPlugin() {
         super(true);
     }
+
+    /**
+     * Logger used within the plugin
+     */
+    private final static Logger LOGGER = Logger.getLogger(TouchPortalPlugin.class.getName());
 
     public static void main(String... args) {
         if (args != null && args.length == 1) {
@@ -148,6 +81,10 @@ public class TouchPortalSampleJavaPlugin extends TouchPortalPlugin implements To
                 boolean connectedPairedAndListening = touchPortalSampleJavaPlugin.connectThenPairAndListen(touchPortalSampleJavaPlugin);
 
                 if (connectedPairedAndListening) {
+                    TouchPortalSampleJavaPlugin.LOGGER.log(Level.INFO,
+                            "Plugin with ID[" + TouchPortalSampleJavaPluginConstants.ID + "] Connected and Paired!"
+                    );
+
                     // Update a State with the ID from the Generated Constants Class
                     touchPortalSampleJavaPlugin.sendStateUpdate(TouchPortalSampleJavaPluginConstants.BaseCategory.States.CustomStateWithEvent.ID, "2");
 
@@ -161,6 +98,7 @@ public class TouchPortalSampleJavaPlugin extends TouchPortalPlugin implements To
 
                     // Update State Choice
                     touchPortalSampleJavaPlugin.sendChoiceUpdate(TouchPortalSampleJavaPluginConstants.SecondCategory.States.CustomStateChoice.ID, new String[]{"1", "2", "3"});
+
                     // Send notification
                     touchPortalSampleJavaPlugin.sendShowNotification(
                             TouchPortalSampleJavaPluginConstants.BaseCategory.ID + ".exampleNotification",
@@ -186,10 +124,91 @@ public class TouchPortalSampleJavaPlugin extends TouchPortalPlugin implements To
         }
     }
 
+
+    private enum Categories {
+        /**
+         * Category definition example
+         */
+        @Category(name = "Touch Portal Plugin Example Base Category", imagePath = "images/icon-24.png")
+        BaseCategory,
+
+        @Category(name = "Touch Portal Plugin Example Second Category", imagePath = "images/icon-24.png")
+        SecondCategory,
+
+        @Category(name = "Touch Portal Plugin Example Category With Subcategories", imagePath = "images/icon-24.png",
+                subCategories = {
+                        @Category.SubCategory(id = "SubCat1", name = "SubCategory 1", imagePath = "%TP_PLUGIN_FOLDER%/images/icon-24.png")
+                })
+        CategoryWithSubs
+    }
+
+    /* Settings Panel */
+
+    /**
+     * Setting of type text definition example
+     */
+    @Setting(name = "IP", defaultValue = "localhost", maxLength = 15, tooltip = @Setting.Tooltip(
+            title = "IP address",
+            body = "ip address to connect to",
+            docUrl = "https://example.com"
+    ))
+    private String ipSetting;
+
+    /**
+     * Setting of type number definition example
+     */
+    @Setting(name = "Update Delay", defaultValue = "10", minValue = 10, maxValue = 30)
+    private int updateDelaySetting = 10;
+
+    /**
+     * Setting of type String and is read only definition example
+     */
+    @Setting(name = "Read Only", defaultValue = "Disconnected", isReadOnly = true)
+    private String readOnly = "Disconnected";
+
+
+    /* States and Events */
+
+    /**
+     * State and Event definition example
+     */
+    @State(defaultValue = "1", categoryId = "BaseCategory")
+    @Event(valueChoices = {"1", "2"}, format = "When customStateWithEvent becomes $val")
+    private String customStateWithEvent;
+
+    /**
+     * State and Event definition example
+     */
+    @State(defaultValue = "1", categoryId = "BaseCategory")
+    @Event(format = "When customStateWithEvent becomes $val")
+    private String stateWithEventTypeText;
+
+    /**
+     * State and Event in Subcategory definition example
+     */
+    @State(defaultValue = "1", categoryId = "CategoryWithSubs")
+    @Event(valueChoices = {"1", "2"}, format = "When customStateWithEventInSubCat becomes $val", subCategoryId = "Cat1")
+    private String customStateWithEventInSubCat;
+
+    /**
+     * State of type choice definition example
+     */
+    @State(valueChoices = {"1", "2"}, defaultValue = "1", categoryId = "SecondCategory")
+    private String[] customStateChoice;
+
+    /**
+     * State of type text definition example
+     */
+    @State(defaultValue = "Default Value", categoryId = "SecondCategory")
+    private String customStateText;
+
+
+    /* Actions */
+
     /**
      * Action example with no parameter
      */
-    @Action(description = "Long Description of Action Simple", format = "Do a simple action", categoryId = "BaseCategory")
+    @Action(description = "Long Description of Action Simple", format = "Do a simple action", categoryId = "BaseCategory", name = "Action Simple")
     @ActionTranslation(language = Language.FRENCH, description = "Description longue de Action Simple", format = "Exécute une action simple", prefix = "Mon préfixe", name = "Action Simple")
     @ActionTranslation(language = Language.PORTUGUESE, description = "Descrição longa da Acção Simples", format = "Realiza uma acção simples", prefix = "Meu prefixo", name = "Acção Simples")
     private void actionSimple() {
@@ -211,9 +230,9 @@ public class TouchPortalSampleJavaPlugin extends TouchPortalPlugin implements To
      * <p>This action will not be called automatically by the SDK</p>
      *
      * @param jsonAction JSONObject
-     * @see TouchPortalSampleJavaPlugin .onReceive
+     * @see TouchPortalSampleJavaPlugin .onReceived
      */
-    @Action(description = "Long Description of Action without Data", categoryId = "BaseCategory")
+    @Action(name = "Action without Data", description = "Long Description of Action without Data", categoryId = "BaseCategory")
     private void actionWithoutData(JsonObject jsonAction) {
         TouchPortalSampleJavaPlugin.LOGGER.log(Level.INFO, "Action actionWithoutData received [" + jsonAction + "]");
     }
