@@ -91,3 +91,7 @@ javadoc {
         options.addBooleanOption('html5', true)
     }
 }
+
+dependencies {
+    implementation libs.kotlingradleplugin
+}
