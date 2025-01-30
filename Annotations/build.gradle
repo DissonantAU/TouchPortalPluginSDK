@@ -60,18 +60,19 @@ publishing {
 }
 
 signing {
+    setRequired({ gradle.taskGraph.hasTask("publish") })
+
     def signingKey = envOrPropOrEmpty('PGP_KEY')
     def signingPassword = envOrPropOrEmpty('PGP_PWD')
 
-    useInMemoryPgpKeys(signingKey, signingPassword)
-
     if (signingKey != '') {
+        useInMemoryPgpKeys(signingKey, signingPassword)
         sign publishing.publications.mavenJava
     }
 }
 
 javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
+    if (JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption('html5', true)
     }
 }
