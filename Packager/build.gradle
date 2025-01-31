@@ -8,20 +8,18 @@ group 'com.christophecvb.touchportal'
 def localArchiveBaseName = 'plugin-packager'
 version isRelease ? versionName : versionName.replace('-SNAPSHOT', '-' + System.currentTimeSeconds())
 
-pluginBundle {
+gradlePlugin {
     website = 'https://github.com/ChristopheCVB/TouchPortalPluginSDK'
     vcsUrl = 'https://github.com/ChristopheCVB/TouchPortalPluginSDK'
     description = 'Touch Portal Plugin Packager - Use with Touch Portal Plugin SDK'
-    tags = ['touchportal', 'packager']
-}
 
-gradlePlugin {
     plugins {
         packagerPlugin {
             displayName = 'Touch Portal Plugin SDK Packager'
             id = group + '.' + localArchiveBaseName
             implementationClass = 'com.christophecvb.touchportal.packager.TouchPortalPluginPackager'
             description = 'Touch Portal Plugin Packager - Use with Touch Portal Plugin SDK'
+            tags.set(['touchportal', 'packager'])
         }
     }
 }

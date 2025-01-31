@@ -97,6 +97,6 @@ test.workingDir = new File("./src/test/resources/TouchPortalPluginTest/")
 
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.setRequired(true)
     }
 }

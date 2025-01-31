@@ -17,3 +17,46 @@ ext.envOrPropOrEmpty = { String name ->
     def value = System.getenv(name) ? System.getenv(name) : findProperty(name)
     return value ? value.toString() : ''
 }
+
+
+boolean compilerEnableDetailedUncheckedWarnings = false
+// Setting to False does nothing with JDK 8 - Warnings added in newer versions
+boolean compilerDisableJavaDocMissingCommentWarnings = true
+
+this.project.childProjects.values().forEach { childProject ->
+    childProject.project.tasks {
+
+        withType(JavaCompile).configureEach { task ->
+            def options = task.options
+
+            if (!JavaVersion.current().java8) {
+                // If JDK newer than 8 - set 'release'
+                println(childProject.name + ' Task ' + task.name + ': Build Target Version set to Java 8')
+                options.release.set(8)
+            }
+
+            // Get Detailed Unchecked Cast Warnings
+            if (compilerEnableDetailedUncheckedWarnings) {
+                println(childProject.name + ' Task ' + task.name + ": Enabling Detailed Unchecked warnings")
+                options.compilerArgs.add("-Xlint:unchecked")
+            }
+        }
+
+        withType(Javadoc).configureEach { task ->
+            def options = task.options as StandardJavadocDocletOptions
+
+            if (!JavaVersion.current().isJava8()) {
+                // If JDK newer than 8 - set 'release'
+                options.addStringOption("-release", "8")
+            }
+
+            if (compilerDisableJavaDocMissingCommentWarnings) {
+                println(childProject.name + ' Task ' + task.name + ": Setting JavaDoc Lint Settings - get all warnings except for missing comments")
+                // Stop giving Warnings for missing Comments during JavaDoc Task
+                options.addBooleanOption("Xdoclint:all,-missing", true)
+            }
+
+        }
+    }
+
+}
