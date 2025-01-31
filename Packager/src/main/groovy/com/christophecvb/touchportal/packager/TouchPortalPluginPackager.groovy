@@ -58,12 +58,12 @@ class TouchPortalPluginPackager implements Plugin<Project> {
 
             final Provider<JvmTarget> targetJreVersionKotlin = project.providers.provider {
                 JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                javaTargetVer.isJava8() ? JvmTarget.JVM_1_8 : JvmTarget.valueOf("JVM_" + javaTargetVer)
+                javaTargetVer.isJava8() ? JvmTarget.JVM_1_8 : JvmTarget.valueOf("JVM_${javaTargetVer}")
             }
 
             final Provider<List<String>> targetJreVersionKotlinRelease = project.providers.provider {
                 JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                ["-Xjdk-release=" + javaTargetVer].toList()
+                ["-Xjdk-release=" + javaTargetVer.majorVersion].toList()
             }
 
 
