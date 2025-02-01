@@ -13,6 +13,10 @@ version versionName
 
 tpPlugin.mainClassSimpleName = mainClassSimpleName
 
+// Version of Java for Builds to Target - Set this here or in a task. Defaults to 8 if not set
+//ext.javaVersionTarget = 8
+//tpPlugin.targetJvmVersion.set(provider { ext.javaVersionTarget as Integer })
+
 buildConfig {
     packageName = project.group
 
