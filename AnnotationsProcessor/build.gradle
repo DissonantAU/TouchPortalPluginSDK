@@ -79,10 +79,11 @@ javadoc {
 
 dependencies {
     implementation libs.gson
-    implementation libs.autoservice
-    implementation libs.javapoet
+    implementation libs.autoService
+    implementation libs.javaPoet
+
     implementation project(':Annotations')
     implementation project(':Helpers')
 
-    testImplementation libs.junit
+    testImplementation libs.bundles.junitBundle
 }

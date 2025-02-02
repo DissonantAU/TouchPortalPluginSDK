@@ -79,14 +79,15 @@ javadoc {
 }
 
 dependencies {
-    api project(':Annotations')
-    api project(':Helpers')
+    implementation libs.okHttp
 
     api libs.gson
 
-    implementation libs.okhttp
+    api project(':Annotations')
+    api project(':Helpers')
 
-    testImplementation libs.junit
+    testImplementation libs.bundles.junitBundle
+
     testAnnotationProcessor project(':AnnotationsProcessor')
 }
 

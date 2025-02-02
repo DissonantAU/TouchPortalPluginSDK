@@ -93,5 +93,5 @@ javadoc {
 }
 
 dependencies {
-    implementation libs.kotlingradleplugin
+    implementation libs.kotlin.gradle.plugin
 }

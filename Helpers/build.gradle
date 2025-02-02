@@ -79,5 +79,6 @@ javadoc {
 
 dependencies {
     api libs.gson
+
     api project(':Annotations')
 }
