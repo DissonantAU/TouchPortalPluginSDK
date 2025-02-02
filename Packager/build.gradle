@@ -1,8 +1,8 @@
 plugins {
     id 'groovy-gradle-plugin'
-    id 'com.gradle.plugin-publish' version '0.15.0'
     id 'maven-publish'
     id 'signing'
+    alias(libs.plugins.pluginPublish)
 }
 
 group 'com.christophecvb.touchportal'
