@@ -26,6 +26,7 @@ autoService = { module = "com.google.auto.service:auto-service", version.ref = "
 javaPoet = { module = "com.squareup:javapoet", version.ref = "javaPoet" }
 
 # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-gradle-plugins-bom
+kotlin-gradle-pluginsBom = { module = "org.jetbrains.kotlin:kotlin-gradle-plugins-bom", version.ref = "kotlinGradle" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinGradle" }
 
 ## Testing
@@ -36,6 +37,7 @@ junit-base = { module = "junit:junit", version.ref = "junit" }
 
 ## Kotlin Sample
 # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-stdLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 
 

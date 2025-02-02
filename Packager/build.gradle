@@ -94,6 +94,7 @@ javadoc {
 }
 
 dependencies {
-    implementation libs.kotlingradleplugin
+    implementation platform(libs.kotlin.gradle.pluginsBom)
+
     implementation libs.kotlin.gradle.plugin
 }
