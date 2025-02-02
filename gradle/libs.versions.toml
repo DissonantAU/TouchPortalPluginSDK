@@ -9,6 +9,10 @@ javaPoet = "1.13.0"
 jUnit = "4.13.2"
 kotlinGradle = "1.9.25"
 
+## Gradle Plugins
+pluginPublish = "0.15.0"
+buildConfig = "3.0.0"
+
 ## Kotlin Sample
 kotlin = "1.9.25"
 
@@ -37,6 +41,9 @@ kotlinstdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "k
 
 
 [plugins]
+
+buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
+pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 
 ## Kotlin Sample
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

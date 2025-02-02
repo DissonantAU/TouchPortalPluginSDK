@@ -1,8 +1,8 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
-    id 'org.jetbrains.kotlin.kapt' version '1.9.25'
     id 'java'
-    id 'com.github.gmazzo.buildconfig' version '3.0.0'
+    alias(libs.plugins.buildConfig)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.kapt)
     id 'com.christophecvb.touchportal.plugin-packager' version "$versionName+"
 }
 
