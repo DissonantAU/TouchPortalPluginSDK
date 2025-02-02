@@ -28,6 +28,7 @@ buildConfig {
 
 dependencies {
     implementation libs.kotlinstdlib
+    implementation libs.kotlin.stdLib
 
     implementation project(':Library')
 
