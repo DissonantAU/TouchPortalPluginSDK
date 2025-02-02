@@ -33,6 +33,7 @@ junit-base = { module = "junit:junit", version.ref = "junit" }
 
 ## Kotlin Sample
 # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-stdLibJdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 
 
