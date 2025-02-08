@@ -30,7 +30,7 @@ buildConfig {
 dependencies {
     implementation platform(libs.kotlin.bom)
 
-    implementation libs.kotlin.stdLibJdk8
+    implementation libs.kotlin.stdLib
 
     implementation project(':Library')
 
