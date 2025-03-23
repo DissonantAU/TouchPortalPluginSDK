@@ -44,10 +44,28 @@ public class PluginProcessor {
         jsonConfiguration.addProperty(PluginHelper.CONFIGURATION_COLOR_LIGHT, plugin.colorLight());
         jsonConfiguration.addProperty(PluginHelper.CONFIGURATION_PARENT_CATEGORY, plugin.parentCategory().getKey());
         jsonPlugin.add(PluginHelper.CONFIGURATION, jsonConfiguration);
-        jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "java -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
-        jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_WIN, "java -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
-        jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_MACOS, "java -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
-        jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_LINUX, "java -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+
+        if (processor.isUseTPBundledJreWin() && processor.isUseTPBundledJreMac() && processor.isUseTPBundledJreLinux()) {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "%TP_JAVA_FILE% -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        } else {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "java -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        }
+
+        if (processor.isUseTPBundledJreWin()) {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_WIN, "%TP_JAVA_FILE% -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        } else {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_WIN, "java -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        }
+        if (processor.isUseTPBundledJreMac()) {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_MACOS, "%TP_JAVA_FILE% -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        } else {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_WIN, "java -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        }
+        if (processor.isUseTPBundledJreLinux()) {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_LINUX, "%TP_JAVA_FILE% -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        } else {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND + PluginHelper.PLUGIN_START_COMMAND_SUFFIX_WIN, "java -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        }
 
         TypeSpec.Builder settingsTypeSpecBuilder = TypeSpec.classBuilder("Settings").addModifiers(Modifier.PUBLIC, Modifier.STATIC);
         JsonArray jsonSettings = new JsonArray();
