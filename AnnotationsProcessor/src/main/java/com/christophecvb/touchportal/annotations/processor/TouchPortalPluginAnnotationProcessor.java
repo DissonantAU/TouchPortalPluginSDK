@@ -42,9 +42,7 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.Writer;
 import java.lang.annotation.AnnotationFormatError;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -68,6 +66,8 @@ public class TouchPortalPluginAnnotationProcessor extends AbstractProcessor {
         super.init(processingEnv);
         this.filer = processingEnv.getFiler();
         this.messager = processingEnv.getMessager();
+
+        checkEnvironmentVariables(processingEnv.getOptions());
     }
 
     @Override
@@ -147,7 +147,12 @@ public class TouchPortalPluginAnnotationProcessor extends AbstractProcessor {
         jsonConfiguration.addProperty(PluginHelper.CONFIGURATION_COLOR_DARK, plugin.colorDark());
         jsonConfiguration.addProperty(PluginHelper.CONFIGURATION_COLOR_LIGHT, plugin.colorLight());
         jsonPlugin.add(PluginHelper.CONFIGURATION, jsonConfiguration);
-        jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "java -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+
+        if (useTPBundledJre) {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "%TP_JAVA_FILE% -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        } else {
+            jsonPlugin.addProperty(PluginHelper.PLUGIN_START_COMMAND, "java -Dapple.awt.UIElement=true -jar ./" + pluginElement.getSimpleName() + ".jar " + PluginHelper.COMMAND_START);
+        }
 
         TypeSpec.Builder settingsTypeSpecBuilder = TypeSpec.classBuilder("Settings").addModifiers(Modifier.PUBLIC, Modifier.STATIC);
         JsonArray jsonSettings = new JsonArray();
@@ -1088,4 +1093,53 @@ public class TouchPortalPluginAnnotationProcessor extends AbstractProcessor {
         String literal = "{\"" + String.join("\",\"", values) + "\"}";
         return FieldSpec.builder(String[].class, fieldName.toUpperCase()).addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC).initializer("new $1T $2L", stringArray, literal).build();
     }
+
+    // All JRE Options
+    private final String optTPJreBundled = "tp.entry.startcmd.jre.bundled";
+    // For Compat with SDK v9
+    private final String optTPJreAllBundled = "tp.entry.startcmd.jre.all.bundled";
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        Set<String> supportedOptions = new LinkedHashSet<>();
+
+        supportedOptions.add(optTPJreBundled);
+
+        supportedOptions.add(optTPJreAllBundled);
+
+        return supportedOptions;
+    }
+
+    // Default is All External
+    boolean useTPBundledJre = false;
+
+    private void checkEnvironmentVariables(Map<String, String> processingEnvOptions) {
+        if (processingEnvOptions != null && !processingEnvOptions.isEmpty()) {
+            this.messager.printMessage(Diagnostic.Kind.NOTE, this.getClass().getSimpleName() + ".checkEnvironmentVariables");
+
+            boolean relevantOptionFound = false;
+
+            for (String optionVal : processingEnvOptions.keySet()) {
+                if (optionVal.startsWith("tp.")) {
+                    relevantOptionFound = true;
+                    break;
+                    //this.messager.printMessage(Diagnostic.Kind.NOTE, "Relevant argument found: '" + optionVal + "'");
+                }
+            }
+
+            if (relevantOptionFound) {
+
+                if (processingEnvOptions.containsKey(optTPJreBundled) || processingEnvOptions.containsKey(optTPJreAllBundled)) {
+                    useTPBundledJre = true;
+                }
+
+            }// else {
+            //    this.messager.printMessage(Diagnostic.Kind.NOTE, this.getClass().getSimpleName() + ".checkEnvironmentVariables - no relevant options passed to the annotation processing tool.");
+            //}
+        }// else {
+        //    this.messager.printMessage(Diagnostic.Kind.NOTE, this.getClass().getSimpleName() + ".checkEnvironmentVariables - no processor-specific options passed to the annotation processing tool.");
+        //}
+        //this.messager.printMessage(Diagnostic.Kind.NOTE, this.getClass().getSimpleName() + ".checkEnvironmentVariables result: TPBundledJRE=" + useTPBundledJre);
+    }
+
 }
