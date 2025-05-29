@@ -10,6 +10,8 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
@@ -19,40 +21,45 @@ class TouchPortalPluginPackager implements Plugin<Project> {
     void apply(Project project) {
         def extension = project.extensions.create('tpPlugin', TouchPortalPluginPackagerExtension)
 
-        final def currentJavaVer = JavaVersion.current()
+        /** Base Directory used by Packager, prepack folder and Final Packaged Plugin (.tpp) goes here */
+        final def pluginBuildDir = project.getLayout().getBuildDirectory().dir("plugin")
+        /** Plugin Package Staging Directory - Everything in here is zipped into Final Packaged Plugin (.tpp), so only one folder containing the plugin data (pluginMainDir) should be in here */
+        final def pluginStagingDir = project.getLayout().getBuildDirectory().dir("plugin/staging")
+        /** Directory that holds jar, entry.tp, and any other resources for Plugin - will be zipped into final packaged plugin (.tpp) and unzipped to the Touch Portal Plugin folder during install */
+        final def pluginMainDir = project.getLayout().getBuildDirectory().dir("plugin/staging/${extension.mainClassSimpleName.get()}")
 
         project.tasks.withType(JavaCompile).configureEach { task ->
-            if (!JavaVersion.current().java8) {
+            if (JavaVersion.current().isJava9Compatible()) {
                 // If JDK newer than 8 - set 'release'
-                println('Task ' + task.name + ': Build Target Version Provider passed to Java Release Option')
-                options.release.set(extension.targetJvmVersion)
+                logger.info('Task ' + task.name + ': Build Target Version Provider passed to Java Release Option')
+                task.options.release.set(extension.targetJvmVersion)
             }
 
             task.doFirst {
-                println('Task ' + task.name + ': Adding -parameters to Compiler Args and setting encoding to UTF-8')
-                options.compilerArgs.add('-parameters')
-                options.encoding = "UTF-8"
+                logger.info('Task ' + task.name + ': Adding -parameters to Compiler Args and setting encoding to UTF-8')
+                task.options.compilerArgs.add('-parameters')
+                task.options.encoding = "UTF-8"
             }
 
-            task.doLast {
+            task.doFirst {
                 // Make sure the JDK is Compatible with the Target Version
                 JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                if (!currentJavaVer.isCompatibleWith(javaTargetVer)) {
-                    throw new GradleException("The JDK version ${JavaVersion.current()} is not compatible with JDK Version ${javaTargetVer}.")
+                if (!JavaVersion.current().isCompatibleWith(javaTargetVer)) {
+                    throw new GradleException("The current JDK version (${JavaVersion.current()}) is not compatible with Target JDK Version ${javaTargetVer}.")
                 }
 
-                if (!currentJavaVer.java8) {
-                    // JDK newer than 8 - check 'release'
-                    println('Note: Task ' + task.name + ' - JRE Release is set to ' + options.release.get())
+                if (JavaVersion.current().isJava9Compatible()) {
+                    // JDK version is newer than 8 and doesn't match target  Version
+                    logger.info("Task $task.name - JRE Release is set to ${task.options.release.get()}")
                 }
             }
-        }
 
+        }
 
         project.tasks.withType(KotlinJvmCompile).configureEach { task ->
             // Make sure JDK is at least Version 8 / Version 8 Compatible
-            if (!currentJavaVer.isCompatibleWith(JavaVersion.VERSION_1_8)) {
-                throw new Exception("Current JRE/JDK (" + currentJavaVer.toString() + ") is not Compatible with Java 8")
+            if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_8)) {
+                throw new Exception("Current JRE/JDK (${JavaVersion.current().toString()}) is not Compatible with Java 8")
             }
 
             final Provider<JvmTarget> targetJreVersionKotlin = project.providers.provider {
@@ -66,28 +73,36 @@ class TouchPortalPluginPackager implements Plugin<Project> {
             }
 
 
-            println('Note: Task ' + task.name + ' - set javaParameters to true')
-            compilerOptions.javaParameters.set(true)
+            logger.info("Note: Task $task.name - set javaParameters to true")
+            task.compilerOptions.javaParameters.set(true)
 
-            if (!currentJavaVer.java8) {
-                println('Task ' + task.name + ': Prepared JVM Target/JDK Release')
-                compilerOptions.jvmTarget.set(targetJreVersionKotlin)
-                compilerOptions.freeCompilerArgs.set(targetJreVersionKotlinRelease)
+            if (JavaVersion.current().isJava9Compatible()) {
+                logger.info("Task $task.name: Prepared JVM Target/JDK Release")
+                task.compilerOptions.jvmTarget.set(targetJreVersionKotlin)
+                task.compilerOptions.freeCompilerArgs.set(targetJreVersionKotlinRelease)
             }
 
             task.doLast {
                 // Make sure the JDK is Compatible with the Target Version
                 JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                if (!currentJavaVer.isCompatibleWith(javaTargetVer)) {
-                    throw new GradleException("The current JDK version ${JavaVersion.current()} is not compatible with ${javaTargetVer}.")
+                if (!JavaVersion.current().isCompatibleWith(javaTargetVer)) {
+                    throw new GradleException("The current JDK version (${JavaVersion.current()}) is not compatible with Target JDK Version ${javaTargetVer}.")
                 }
 
-                if (!currentJavaVer.java8) {
-                    println('Task ' + task.name + ': Kotlin JVM Target is set to ' + compilerOptions.jvmTarget.get())
+                if (JavaVersion.current().isJava9Compatible()) {
+                    logger.info("Task $task.name: Kotlin JVM Target is set to ${task.compilerOptions.jvmTarget.get()}")
+                }
+            }
+
+        }
+
+        project.tasks.withType(Javadoc).configureEach { task ->
+            task.doFirst {
+                if (JavaVersion.current().isJava9Compatible()) {
+                    (task.options as StandardJavadocDocletOptions).addStringOption("-release", extension.targetJvmVersion.get() as String)
                 }
             }
         }
-
 
         project.tasks.withType(Jar).configureEach { task ->
             task.dependsOn project.configurations.runtimeClasspath
@@ -95,6 +110,7 @@ class TouchPortalPluginPackager implements Plugin<Project> {
             task.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
             task.doFirst {
+                logger.info("Adding JAR Manifest")
                 manifest {
                     attributes 'Implementation-Title': "${extension.mainClassSimpleName.get()}",
                             'Implementation-Version': "${project.version}",
@@ -103,78 +119,199 @@ class TouchPortalPluginPackager implements Plugin<Project> {
                             'Target-Jre-Spec': extension.targetJvmVersion.get()
                 }
 
+                logger.info("Adding JARs from Runtime Classpath to create Fat JAR")
+
                 from {
-                    project.configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { project.zipTree(it) }
+                    project.configurations.runtimeClasspath.findAll {
+                        it.name.endsWith('jar')
+                    }.collect {
+                        logger.debug("Adding ${it} to JAR")
+                        project.zipTree(it)
+                    }
                 }
             }
+
         }
 
-        def copyResources = project.tasks.register('copyResources', Copy) {
-            dependsOn project.processResources
+        def copyResources = project.tasks.register('copyResources', Copy) { task ->
+            task.group = 'Touch Portal Plugin'
 
-            group = 'Touch Portal Plugin'
-            from(project.file("${project.buildDir}/resources/main/"))
-            into("${project.buildDir}/plugin/${extension.mainClassSimpleName.get()}/")
-            setDuplicatesStrategy(DuplicatesStrategy.WARN)
+            task.from(project.processResources)
+            task.into(pluginMainDir)
 
-            doLast {
-                println 'Resources Copied into plugin directory'
+            if (!logger.infoEnabled)
+                task.setDuplicatesStrategy(DuplicatesStrategy.INCLUDE)
+            else {
+                task.setDuplicatesStrategy(DuplicatesStrategy.WARN)
+
+                task.doFirst {
+                    logger.info("Destination: ${pluginMainDir.get()}")
+
+                    if (logger.debugEnabled) {
+                        task.getInputs().files.asFileTree.each {
+                            logger.debug("Copying File: ${it}")
+                        }
+                    }
+                }
             }
+
+            task.doLast {
+                logger.lifecycle('Resources Copied into plugin directory')
+
+                if (logger.debugEnabled) {
+                    task.getOutputs().files.asFileTree.each {
+                        logger.debug("Copied file: ${it}")
+                    }
+                }
+            }
+
         }
 
-        def copyJar = project.tasks.register('copyJar', Copy) {
-            group = 'Touch Portal Plugin'
-            dependsOn project.jar
-            from(project.file("${project.buildDir}/libs/"))
-            into("${project.buildDir}/plugin/${extension.mainClassSimpleName.get()}/")
-            rename {
-                "${extension.mainClassSimpleName.get()}.jar"
-            }
-            setDuplicatesStrategy(DuplicatesStrategy.WARN)
+        def copyJar = project.tasks.register('copyJar', Copy) { task ->
+            task.group = 'Touch Portal Plugin'
 
-            doLast {
-                println 'Jar Copied into plugin directory'
+            task.from(project.jar)
+            task.into(pluginMainDir)
+
+            task.rename { "${extension.mainClassSimpleName.get()}.jar" }
+
+            if (!logger.infoEnabled)
+                task.setDuplicatesStrategy(DuplicatesStrategy.INCLUDE)
+            else {
+                task.setDuplicatesStrategy(DuplicatesStrategy.WARN)
+
+                task.doFirst {
+                    logger.info("Destination: ${pluginMainDir.get()}")
+
+                    if (logger.debugEnabled) {
+                        task.getInputs().files.asFileTree.each {
+                            logger.debug("Copying File: ${it}")
+                        }
+                    }
+                }
             }
+
+            task.doLast {
+                logger.lifecycle("JAR Copied into plugin directory")
+
+                if (logger.debugEnabled) {
+                    task.getOutputs().files.asFileTree.each {
+                        logger.debug("Copied file: ${it}")
+                    }
+                }
+            }
+
         }
 
-        def copyGeneratedJavaResources = project.tasks.register('copyGeneratedJavaResources', Copy) {
-            group = 'Touch Portal Plugin'
-            dependsOn copyJar
-            from(project.file("${project.buildDir}/generated/sources/annotationProcessor/java/main/resources/"))
-            into("${project.buildDir}/plugin/${extension.mainClassSimpleName.get()}/")
+        def copyGeneratedJavaResources = project.tasks.register('copyGeneratedJavaResources', Copy) { task ->
+            task.group = 'Touch Portal Plugin'
+            task.dependsOn(project.jar)
 
-            doLast {
-                println 'Generated Java Resources Copied into plugin directory'
+            var source = project.getLayout().getBuildDirectory().dir("generated/sources/annotationProcessor/java/main/resources")
+
+            task.from(source)
+            task.into(pluginMainDir)
+
+            if (logger.infoEnabled) {
+                task.doFirst {
+                    logger.info("Source:      ${source.get()}")
+                    logger.info("Destination: ${pluginMainDir.get()}")
+
+                    if (logger.debugEnabled) {
+                        source.get().asFileTree.files.each {
+                            logger.info("copyGeneratedJavaResources: ${it}")
+                        }
+                    }
+                }
             }
+
+            task.doLast {
+                logger.lifecycle('Generated Java Resources Copied into plugin directory')
+
+                if (logger.debugEnabled) {
+                    task.getOutputs().files.asFileTree.each {
+                        logger.debug("Copied file: ${it}")
+                    }
+                }
+            }
+
         }
 
-        def copyGeneratedKotlinResources = project.tasks.register('copyGeneratedKotlinResources', Copy) {
-            group = 'Touch Portal Plugin'
-            dependsOn copyJar
-            from(project.file("${project.buildDir}/generated/source/kapt/main/resources/"))
-            into("${project.buildDir}/plugin/${extension.mainClassSimpleName.get()}/")
+        def copyGeneratedKotlinResources = project.tasks.register('copyGeneratedKotlinResources', Copy) { task ->
+            task.group = 'Touch Portal Plugin'
+            task.dependsOn(project.jar)
 
-            doLast {
-                println 'Generated Kotlin Resources Copied into plugin directory'
+            var source = project.getLayout().getBuildDirectory().dir("generated/source/kapt/main/resources")
+
+            task.from(source)
+            task.into(pluginMainDir)
+
+            if (logger.infoEnabled) {
+                task.doFirst {
+                    logger.info("Source:      ${source.get()}")
+                    logger.info("Destination: ${pluginMainDir.get()}")
+
+                    if (logger.debugEnabled) {
+                        source.get().asFileTree.files.each {
+                            logger.debug("Copying: ${it}")
+                        }
+                    }
+                }
             }
+
+            task.doLast {
+                logger.lifecycle('Generated Kotlin Resources Copied into plugin directory')
+
+                if (logger.debugEnabled) {
+                    task.getOutputs().files.asFileTree.each {
+                        logger.debug("Copied file: ${it}")
+                    }
+                }
+            }
+
         }
 
-        def packagePlugin = project.tasks.register('packagePlugin', Zip) {
-            group = 'Touch Portal Plugin'
-            description = 'Package the Project into a TPP'
-            dependsOn copyResources, copyGeneratedJavaResources, copyGeneratedKotlinResources
+        def packagePlugin = project.tasks.register('packagePlugin', Zip) { task ->
+            task.group = 'Touch Portal Plugin'
+            task.description = 'Package the Project into a TPP'
+            task.dependsOn copyResources, copyGeneratedJavaResources, copyGeneratedKotlinResources, copyJar
 
-            archiveFileName = "${extension.mainClassSimpleName.get()}.tpp"
-            destinationDirectory = project.file("${project.buildDir}/plugin")
-            from "${project.buildDir}/plugin/"
-            exclude "*.tpp"
-            includeEmptyDirs = false
+            var destinationFileName = project.provider { extension.mainClassSimpleName.get() + ".tpp" }
 
-            doLast {
-                println 'Plugin Packaged'
+            task.from(pluginStagingDir)
+            task.includeEmptyDirs = false
+            task.reproducibleFileOrder = true
+
+            task.destinationDirectory = pluginBuildDir
+            task.archiveFileName = destinationFileName
+
+            if (logger.infoEnabled) {
+                task.doFirst {
+                    logger.info("Source:      ${pluginStagingDir.get()}")
+                    logger.info("Destination: ${pluginBuildDir.get()}/${destinationFileName.get()}")
+
+                    if (logger.debugEnabled) {
+                        pluginMainDir.get().asFileTree.files.each {
+                            logger.debug("Packaging: ${it}")
+                        }
+                    }
+                }
             }
+
+            task.doLast {
+                logger.lifecycle('Plugin Packaged')
+
+                if (logger.debugEnabled) {
+                    task.getOutputs().files.asFileTree.each {
+                        logger.debug("Output file: ${it}")
+                    }
+                }
+            }
+
         }
+
     }
+
 }
 
 abstract class TouchPortalPluginPackagerExtension {
