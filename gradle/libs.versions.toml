@@ -10,7 +10,7 @@ junit = "4.13.2"
 kotlinGradle = "2.0.21"
 
 ## Gradle Plugins
-pluginPublish = "0.15.0"
+pluginPublish = "1.2.2"
 buildConfig = "3.0.0"
 
 ## Kotlin Sample
