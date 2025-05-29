@@ -27,25 +27,24 @@ this.project.childProjects.values().forEach { childProject ->
     childProject.project.tasks {
 
         withType(JavaCompile).configureEach { task ->
-            def options = task.options
 
-            if (!JavaVersion.current().java8) {
+            if (JavaVersion.current().isJava9Compatible()) {
                 // If JDK newer than 8 - set 'release'
                 println(childProject.name + ' Task ' + task.name + ': Build Target Version set to Java 8')
-                options.release.set(8)
+                task.options.release.set(8)
             }
 
             // Get Detailed Unchecked Cast Warnings
             if (compilerEnableDetailedUncheckedWarnings) {
                 println(childProject.name + ' Task ' + task.name + ": Enabling Detailed Unchecked warnings")
-                options.compilerArgs.add("-Xlint:unchecked")
+                task.options.compilerArgs.add("-Xlint:unchecked")
             }
         }
 
         withType(Javadoc).configureEach { task ->
             def options = task.options as StandardJavadocDocletOptions
 
-            if (!JavaVersion.current().isJava8()) {
+            if (JavaVersion.current().isJava9Compatible()) {
                 // If JDK newer than 8 - set 'release'
                 options.addStringOption("-release", "8")
             }
