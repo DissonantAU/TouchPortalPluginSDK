@@ -6,7 +6,7 @@ okHttp = "4.12.0"
 autoService = "1.1.1"
 javaPoet = "1.13.0"
 
-kotlinGradle = "1.9.25"
+kotlinGradle = "2.0.21"
 
 junit = "4.13.2"
 
@@ -15,7 +15,7 @@ pluginPublish = "1.0.0"
 buildConfig = "3.1.0"
 
 ## Kotlin Sample
-kotlin = "1.9.25"
+kotlin = "2.0.21"
 
 
 
