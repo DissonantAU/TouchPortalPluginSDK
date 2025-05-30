@@ -7,14 +7,14 @@ autoService = "1.1.1"
 javaPoet = "1.13.0"
 
 junit = "4.13.2"
-kotlinGradle = "1.9.25"
+kotlinGradle = "2.0.21"
 
 ## Gradle Plugins
 pluginPublish = "0.15.0"
 buildConfig = "3.0.0"
 
 ## Kotlin Sample
-kotlin = "1.9.25"
+kotlin = "2.0.21"
 
 
 
