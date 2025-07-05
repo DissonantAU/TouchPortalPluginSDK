@@ -79,6 +79,7 @@ javadoc {
 }
 
 dependencies {
+    implementation platform(libs.okHttp.bom)
     implementation libs.okHttp
 
     api libs.gson

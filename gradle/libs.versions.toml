@@ -21,7 +21,11 @@ kotlin = "2.0.21"
 [libraries]
 
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
+
+# https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom
+okHttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okHttp" }
+okHttp = { module = "com.squareup.okhttp3:okhttp" }
+
 autoService = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
 javaPoet = { module = "com.squareup:javapoet", version.ref = "javaPoet" }
 
