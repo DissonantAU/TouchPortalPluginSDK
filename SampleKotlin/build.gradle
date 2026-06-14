@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 plugins {
     id 'java'
     alias(libs.plugins.buildConfig)
@@ -13,9 +16,8 @@ version versionName
 
 tpPlugin.mainClassSimpleName = mainClassSimpleName
 
-// Version of Java for Builds to Target - Set this here or in a task. Defaults to 8 if not set
-//ext.javaVersionTarget = 8
-//tpPlugin.targetJvmVersion.set(provider { ext.javaVersionTarget as Integer })
+// Java Version to Target with Java 8 as default. Can be changed in a task e.g. buildTargetJvmVersion.set(17)
+final def buildTargetJvmVersion = objects.property(Integer.class).convention(8) as Property<Integer>
 
 buildConfig {
     packageName = project.group
@@ -35,4 +37,28 @@ dependencies {
     implementation project(':Library')
 
     kapt project(':AnnotationsProcessor')
+}
+
+// Version of Java for Builds to Target - Set this here or in a task.
+if (JavaVersion.current().java9Compatible) {
+    tasks.withType(JavaCompile).configureEach {
+        options.release = buildTargetJvmVersion
+    }
+
+    tasks.withType(KotlinJvmCompile).configureEach { task ->
+        Provider<JvmTarget> targetJreVersionKotlin = buildTargetJvmVersion.map { targetVer ->
+            targetVer == 8 ? JvmTarget.JVM_1_8 : JvmTarget.fromTarget(targetVer.toString())
+        }
+
+        Provider<List<String>> targetJreVersionKotlinRelease = buildTargetJvmVersion.map { targetVer ->
+            ["-Xjdk-release=" + JavaVersion.toVersion(targetVer).majorVersion].toList()
+        }
+
+        println('Note: Task ' + task.name + ' - set javaParameters to true')
+        compilerOptions.javaParameters.set(true)
+
+        println('Task ' + task.name + ': Prepared JVM Target/JDK Release')
+        compilerOptions.jvmTarget.set(targetJreVersionKotlin)
+        compilerOptions.freeCompilerArgs.addAll(targetJreVersionKotlinRelease)
+    }
 }
