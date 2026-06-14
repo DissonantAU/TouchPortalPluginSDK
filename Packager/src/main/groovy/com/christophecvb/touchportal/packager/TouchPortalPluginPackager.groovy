@@ -6,12 +6,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.tasks.Jar
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 class TouchPortalPluginPackager implements Plugin<Project> {
@@ -19,75 +17,18 @@ class TouchPortalPluginPackager implements Plugin<Project> {
     void apply(Project project) {
         def extension = project.extensions.create('tpPlugin', TouchPortalPluginPackagerExtension)
 
-        final def currentJavaVer = JavaVersion.current()
-
         project.tasks.withType(JavaCompile).configureEach { task ->
-            if (!JavaVersion.current().java8) {
-                // If JDK newer than 8 - set 'release'
-                println('Task ' + task.name + ': Build Target Version Provider passed to Java Release Option')
-                options.release.set(extension.targetJvmVersion)
-            }
-
             task.doFirst {
                 println('Task ' + task.name + ': Adding -parameters to Compiler Args and setting encoding to UTF-8')
                 options.compilerArgs.add('-parameters')
                 options.encoding = "UTF-8"
             }
-
-            task.doLast {
-                // Make sure the JDK is Compatible with the Target Version
-                JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                if (!currentJavaVer.isCompatibleWith(javaTargetVer)) {
-                    throw new GradleException("The JDK version ${JavaVersion.current()} is not compatible with JDK Version ${javaTargetVer}.")
-                }
-
-                if (!currentJavaVer.java8) {
-                    // JDK newer than 8 - check 'release'
-                    println('Note: Task ' + task.name + ' - JRE Release is set to ' + options.release.get())
-                }
-            }
         }
-
 
         project.tasks.withType(KotlinJvmCompile).configureEach { task ->
-            // Make sure JDK is at least Version 8 / Version 8 Compatible
-            if (!currentJavaVer.isCompatibleWith(JavaVersion.VERSION_1_8)) {
-                throw new Exception("Current JRE/JDK (" + currentJavaVer.toString() + ") is not Compatible with Java 8")
-            }
-
-            final Provider<JvmTarget> targetJreVersionKotlin = project.providers.provider {
-                JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                javaTargetVer.isJava8() ? JvmTarget.JVM_1_8 : JvmTarget.valueOf("JVM_${javaTargetVer}")
-            }
-
-            final Provider<List<String>> targetJreVersionKotlinRelease = project.providers.provider {
-                JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                ["-Xjdk-release=" + javaTargetVer.majorVersion].toList()
-            }
-
-
             println('Note: Task ' + task.name + ' - set javaParameters to true')
             compilerOptions.javaParameters.set(true)
-
-            if (!currentJavaVer.java8) {
-                println('Task ' + task.name + ': Prepared JVM Target/JDK Release')
-                compilerOptions.jvmTarget.set(targetJreVersionKotlin)
-                compilerOptions.freeCompilerArgs.set(targetJreVersionKotlinRelease)
-            }
-
-            task.doLast {
-                // Make sure the JDK is Compatible with the Target Version
-                JavaVersion javaTargetVer = JavaVersion.toVersion(extension.targetJvmVersion.get())
-                if (!currentJavaVer.isCompatibleWith(javaTargetVer)) {
-                    throw new GradleException("The current JDK version ${JavaVersion.current()} is not compatible with ${javaTargetVer}.")
-                }
-
-                if (!currentJavaVer.java8) {
-                    println('Task ' + task.name + ': Kotlin JVM Target is set to ' + compilerOptions.jvmTarget.get())
-                }
-            }
         }
-
 
         project.tasks.withType(Jar).configureEach { task ->
             task.dependsOn project.configurations.runtimeClasspath
@@ -98,9 +39,7 @@ class TouchPortalPluginPackager implements Plugin<Project> {
                 manifest {
                     attributes 'Implementation-Title': "${extension.mainClassSimpleName.get()}",
                             'Implementation-Version': "${project.version}",
-                            'Main-Class': "${project.group}.${extension.mainClassSimpleName.get()}",
-                            'Build-Jdk-Spec': JavaVersion.current().majorVersion,
-                            'Target-Jre-Spec': extension.targetJvmVersion.get()
+                            'Main-Class': "${project.group}.${extension.mainClassSimpleName.get()}"
                 }
 
                 from {
@@ -179,21 +118,8 @@ class TouchPortalPluginPackager implements Plugin<Project> {
 
 abstract class TouchPortalPluginPackagerExtension {
     abstract Property<String> getMainClassSimpleName()
-    /**
-     * Java Version to be targeted during Build
-     *
-     * This sets the JRE version the project to be compiled to.
-     *
-     * Can be supplied a Provider to allow for setting or
-     * changing Version at build using meta-tasks
-     *
-     * Version 8 by default
-     *
-     */
-    abstract Property<Integer> getTargetJvmVersion()
 
     TouchPortalPluginPackagerExtension() {
         mainClassSimpleName.convention('TouchPortalPlugin')
-        targetJvmVersion.convention(8)
     }
 }
